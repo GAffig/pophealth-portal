@@ -1,6 +1,6 @@
 /**
- * County FIPS lookup and deep-link URL generator for federal health data sources.
- * FIPS codes: 5-digit (state 2 + county 3)
+ * County FIPS lookup and deep-link URL generator for federal/state health data sources.
+ * FIPS codes: 5-digit (state 2 + county 3). Patterns sourced from pophealthdataportal source-registry.
  */
 
 export const COUNTY_FIPS_MAP: Record<string, string> = {
@@ -48,6 +48,7 @@ function countySlug(name: string): string {
 /**
  * Return a county-specific deep link for the given indicator.
  * Falls back to the stored sourceUrl if no specialised pattern applies.
+ * Link patterns follow the pophealthdataportal source-registry conventions.
  */
 export function buildDeepLink(indicator: {
   source: string;
@@ -58,10 +59,11 @@ export function buildDeepLink(indicator: {
   const { source, sourceUrl, state, county } = indicator;
   const f = fips(state, county);
 
-  if (source.includes("American Community Survey")) {
+  // American Community Survey (ACS) — census.gov table with county geography filter
+  if (source.includes("American Community Survey") || source.includes("ACS")) {
     if (f && sourceUrl.includes("data.census.gov/table/")) {
-      const separator = sourceUrl.includes("?") ? "&" : "?";
-      return `${sourceUrl}${separator}g=050XX00US${f}`;
+      const sep = sourceUrl.includes("?") ? "&" : "?";
+      return `${sourceUrl}${sep}g=050XX00US${f}`;
     }
     if (f) {
       return `https://data.census.gov/profile/050XX00US${f}`;
@@ -69,38 +71,51 @@ export function buildDeepLink(indicator: {
     return sourceUrl;
   }
 
-  if (source.includes("County Health Rankings")) {
+  // CDC PLACES — Socrata dataset with County_FIPS filter
+  if (source.includes("CDC PLACES") || source.includes("PLACES")) {
+    const base = "https://data.cdc.gov/500-Cities-Places/PLACES-County-Data-GIS-Friendly-Format-2025-releas/i46a-9kgh";
+    return f ? `${base}/about_data?CountyFIPS=${f}` : base;
+  }
+
+  // CDC WONDER — underlying cause-of-death query interface
+  if (source.includes("CDC WONDER") || source.includes("WONDER")) {
+    return "https://wonder.cdc.gov/deaths-by-underlying-cause.html";
+  }
+
+  // County Health Rankings — specific metric page when URL already points to one,
+  // otherwise fall through to county-level state page
+  if (source.includes("County Health Rankings") || source.includes("CHR")) {
     const stateName = STATE_NAMES[state] ?? state.toLowerCase();
     const slug = countySlug(county.replace(/ City$/, "").replace(/ County$/, ""));
-    const year = 2024;
-    const base = `https://www.countyhealthrankings.org/health-data/${stateName}/${slug}/${year}`;
-    return f ? `${base}?county=${f}` : base;
+    return `https://www.countyhealthrankings.org/health-data/${stateName}/${slug}/2024`;
   }
 
-  if (source.includes("CDC PLACES") || source.includes("PLACES")) {
-    if (f) {
-      return `https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-County-Data-20/swc5-untg/about_data?County_FIPS=${f}`;
-    }
-    return "https://chronicdata.cdc.gov/500-Cities-Places/PLACES-Local-Data-for-Better-Health-County-Data-20/swc5-untg/about_data";
-  }
-
+  // USDA ERS — Atlas of Rural and Small-Town America (interactive county map)
   if (source.includes("USDA") || source.includes("Economic Research Service")) {
     return "https://www.ers.usda.gov/data-products/atlas-of-rural-and-small-town-america/go-to-the-atlas/";
   }
 
+  // SAHIE — Census SAHIE dataset downloads
   if (source.includes("SAHIE") || source.includes("Small Area Health Insurance")) {
     if (f) {
       return `https://data.census.gov/table/ACSST5Y2023.S2701?g=050XX00US${f}`;
     }
-    return "https://www.census.gov/data/datasets/time-series/demo/sahie/estimates-acs.html";
+    return "https://www.census.gov/programs-surveys/sahie/data/datasets.html";
   }
 
+  // BRFSS — CDC prevalence data tool (no county-level filter available publicly)
   if (source.includes("BRFSS") || source.includes("Behavioral Risk Factor")) {
     return "https://www.cdc.gov/brfss/brfssprevalence/index.html";
   }
 
-  if (source.includes("CDC WONDER") || source.includes("WONDER")) {
-    return "https://wonder.cdc.gov/mcd-icd10-provisional.html";
+  // Tennessee Department of Health — death/birth statistics landing
+  if (source.includes("Tennessee Department of Health")) {
+    return "https://www.tn.gov/health/health-program-areas/statistics/health-data/death-statistics.html";
+  }
+
+  // Virginia Department of Health — Health Opportunity Index / community health dashboard
+  if (source.includes("Virginia Department of Health")) {
+    return "https://apps.vdh.virginia.gov/omhhe/hoi/hoi-dashboard";
   }
 
   return sourceUrl;
