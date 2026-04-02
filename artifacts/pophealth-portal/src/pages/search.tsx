@@ -29,7 +29,6 @@ export default function SearchPage() {
 
     const allTn = selectedCounties.length > 0 && selectedCounties.every(id => id.startsWith("TN:"));
     const allVa = selectedCounties.length > 0 && selectedCounties.every(id => id.startsWith("VA:"));
-    const isSingleState = allTn || allVa;
 
     const effectiveState: SearchRequestState | undefined =
       allTn ? SearchRequestState.TN
@@ -42,10 +41,7 @@ export default function SearchPage() {
       data: {
         query,
         state: effectiveState,
-        // Only pass county names when a single state is in scope —
-        // prevents ambiguous county names (e.g., "Washington") from
-        // matching the same-named county in the other state.
-        counties: isSingleState && countyNames.length > 0 ? countyNames : undefined,
+        counties: countyNames.length > 0 ? countyNames : undefined,
       }
     });
   };
