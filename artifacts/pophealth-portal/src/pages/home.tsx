@@ -23,7 +23,7 @@ export default function Home() {
             </h2>
           </div>
           <p className="text-lg max-w-3xl text-foreground/80 leading-relaxed">
-            Find, filter, and save authoritative county-level health indicators for Northeast Tennessee and Southwest Virginia. Built for analysts preparing population health projects, grant applications, and community assessments using trusted secondary data.
+            Find, filter, and save authoritative county-level health indicators for Northeast Tennessee and Southwest Virginia — covering population health projects, grant applications, community assessments, and research using trusted secondary data.
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
             <Link href="/search">
