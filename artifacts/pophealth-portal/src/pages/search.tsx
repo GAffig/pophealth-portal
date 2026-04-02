@@ -8,7 +8,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
-import { CountySelector } from "@/components/county-selector";
+import { CountySelector, countyIdsToNames } from "@/components/county-selector";
 import type { Indicator } from "@workspace/api-client-react";
 
 export default function SearchPage() {
@@ -24,12 +24,14 @@ export default function SearchPage() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (!query.trim()) return;
+
+    const countyNames = countyIdsToNames(selectedCounties);
     
     searchMutation.mutate({
       data: {
         query,
         state: stateFilter !== "all" ? stateFilter as any : undefined,
-        counties: selectedCounties.length > 0 ? selectedCounties : undefined,
+        counties: countyNames.length > 0 ? countyNames : undefined,
       }
     });
   };

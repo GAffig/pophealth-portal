@@ -5,7 +5,7 @@ import { Layout } from "@/components/layout";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ExternalLink, Loader2 } from "lucide-react";
+import { ExternalLink } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { CountySelector } from "@/components/county-selector";
 
@@ -29,7 +29,10 @@ export default function IndicatorsPage() {
     if (!allIndicators) return [];
     if (selectedCounties.length === 0) return allIndicators;
     return allIndicators.filter(ind =>
-      selectedCounties.some(c => ind.county.toLowerCase().includes(c.toLowerCase()))
+      selectedCounties.some(countyId => {
+        const [state, name] = countyId.split(":");
+        return ind.state === state && ind.county === name;
+      })
     );
   }, [allIndicators, selectedCounties]);
 
@@ -42,20 +45,18 @@ export default function IndicatorsPage() {
         </div>
 
         <div className="bg-card p-5 rounded-xl border shadow-sm space-y-4">
-          <div className="flex flex-col md:flex-row gap-4">
-            <div className="w-full md:w-64">
-              <Select value={domainFilter} onValueChange={setDomainFilter}>
-                <SelectTrigger data-testid="select-filter-domain">
-                  <SelectValue placeholder="Domain" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Domains</SelectItem>
-                  {domains?.map(d => (
-                    <SelectItem key={d.id} value={d.slug}>{d.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div className="w-full md:w-64">
+            <Select value={domainFilter} onValueChange={setDomainFilter}>
+              <SelectTrigger data-testid="select-filter-domain">
+                <SelectValue placeholder="Domain" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Domains</SelectItem>
+                {domains?.map(d => (
+                  <SelectItem key={d.id} value={d.slug}>{d.name}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="border-t pt-4">
@@ -72,7 +73,9 @@ export default function IndicatorsPage() {
           {!isLoading && indicators !== undefined && (
             <div className="px-4 py-2 border-b bg-muted/30 text-xs font-mono text-muted-foreground">
               {indicators.length} indicator{indicators.length !== 1 ? "s" : ""}
-              {selectedCounties.length > 0 ? ` in ${selectedCounties.join(", ")}` : " across all counties"}
+              {selectedCounties.length > 0
+                ? ` in ${selectedCounties.map(id => id.split(":")[1]).join(", ")}`
+                : " across all counties"}
             </div>
           )}
           <Table>
