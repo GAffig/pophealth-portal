@@ -26,7 +26,7 @@ export function Layout({ children }: LayoutProps) {
       <div className="md:hidden flex items-center justify-between p-4 border-b bg-card">
         <div className="flex items-center gap-2">
           <Activity className="h-6 w-6 text-primary" />
-          <span className="font-bold text-lg text-primary tracking-tight">JMH Portal</span>
+          <span className="font-bold text-lg text-primary tracking-tight">PH Portal</span>
         </div>
         <Sheet>
           <SheetTrigger asChild>
@@ -61,7 +61,7 @@ function SidebarContent({ location }: { location: string }) {
       <div className="p-6 border-b">
         <div className="flex items-center gap-2 mb-2">
           <Activity className="h-8 w-8 text-primary" />
-          <span className="font-bold text-xl text-primary tracking-tight">JMH</span>
+          <span className="font-bold text-xl text-primary tracking-tight">PH Portal</span>
         </div>
         <p className="text-xs font-mono text-muted-foreground uppercase tracking-wider">Population Health</p>
       </div>

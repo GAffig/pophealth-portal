@@ -1,19 +1,20 @@
 import { useState } from "react";
 import { useSearchIndicators, useSaveSource, getListSavedSourcesQueryKey } from "@workspace/api-client-react";
-import { Search, Loader2, Star, Save, BookmarkCheck, ExternalLink, Filter } from "lucide-react";
+import { Search, Loader2, Star, Save, ExternalLink } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
+import { CountySelector } from "@/components/county-selector";
 import type { Indicator } from "@workspace/api-client-react";
 
 export default function SearchPage() {
   const [query, setQuery] = useState("");
   const [stateFilter, setStateFilter] = useState<string>("all");
+  const [selectedCounties, setSelectedCounties] = useState<string[]>([]);
   
   const searchMutation = useSearchIndicators();
   const saveMutation = useSaveSource();
@@ -27,7 +28,8 @@ export default function SearchPage() {
     searchMutation.mutate({
       data: {
         query,
-        state: stateFilter !== "all" ? stateFilter as any : undefined
+        state: stateFilter !== "all" ? stateFilter as any : undefined,
+        counties: selectedCounties.length > 0 ? selectedCounties : undefined,
       }
     });
   };
@@ -51,44 +53,38 @@ export default function SearchPage() {
       <div className="max-w-6xl mx-auto p-6 md:p-8 space-y-8">
         <div className="space-y-2">
           <h1 className="text-3xl font-bold tracking-tight">Search Indicators</h1>
-          <p className="text-muted-foreground">Query health indicators using natural language across all counties and domains.</p>
+          <p className="text-muted-foreground">Query health indicators by keyword across all counties and domains. Use region presets to quickly scope to NE Tennessee or SW Virginia.</p>
         </div>
 
-        <form onSubmit={handleSearch} className="bg-card p-6 rounded-xl border shadow-sm space-y-4">
+        <form onSubmit={handleSearch} className="bg-card p-6 rounded-xl border shadow-sm space-y-5">
           <div className="flex flex-col md:flex-row gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="e.g. adult obesity rates in southwest virginia"
-                className="pl-10 h-12 text-lg font-mono bg-background"
+                placeholder="e.g. adult obesity, mental health providers, childhood poverty"
+                className="pl-10 h-12 text-base font-mono bg-background"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 data-testid="input-search"
               />
             </div>
-            <div className="w-full md:w-48">
-              <Select value={stateFilter} onValueChange={setStateFilter}>
-                <SelectTrigger className="h-12" data-testid="select-state">
-                  <div className="flex items-center gap-2">
-                    <Filter className="h-4 w-4 text-muted-foreground" />
-                    <SelectValue placeholder="All States" />
-                  </div>
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All States</SelectItem>
-                  <SelectItem value="TN">Tennessee</SelectItem>
-                  <SelectItem value="VA">Virginia</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
             <Button type="submit" size="lg" className="h-12 px-8" disabled={searchMutation.isPending} data-testid="btn-submit-search">
               {searchMutation.isPending ? <Loader2 className="h-5 w-5 animate-spin" /> : "Search"}
             </Button>
           </div>
+
+          <div className="border-t pt-4">
+            <CountySelector
+              selectedCounties={selectedCounties}
+              onChangeCounties={setSelectedCounties}
+              selectedState={stateFilter}
+              onChangeState={setStateFilter}
+            />
+          </div>
           
-          <div className="flex flex-wrap gap-2 pt-2">
+          <div className="flex flex-wrap gap-2 pt-1">
             <span className="text-sm text-muted-foreground py-1">Try:</span>
-            {["diabetes prevalence in TN", "mental health providers washington county", "childhood poverty"].map(prompt => (
+            {["diabetes prevalence", "mental health providers", "childhood poverty", "tobacco use"].map(prompt => (
               <Badge 
                 key={prompt} 
                 variant="secondary" 

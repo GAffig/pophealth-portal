@@ -16,14 +16,14 @@ export default function Home() {
         <section className="space-y-6">
           <div className="space-y-2">
             <h1 className="text-4xl md:text-5xl font-bold tracking-tight text-foreground">
-              Johnston Memorial Hospital
-            </h1>
-            <h2 className="text-2xl md:text-3xl text-muted-foreground font-light">
               Population Health Data Portal
+            </h1>
+            <h2 className="text-xl md:text-2xl text-muted-foreground font-light">
+              Secondary Data Retrieval for Population Health Analysis
             </h2>
           </div>
           <p className="text-lg max-w-3xl text-foreground/80 leading-relaxed">
-            Professional-grade county-level health data retrieval for public health analysts, hospital planners, and CHNA teams covering Tennessee and Virginia.
+            Find, filter, and save authoritative county-level health indicators for Northeast Tennessee and Southwest Virginia. Built for analysts preparing population health projects, grant applications, and community assessments using trusted secondary data.
           </p>
           <div className="flex flex-wrap gap-4 pt-4">
             <Link href="/search">
