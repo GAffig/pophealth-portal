@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Layout } from "@/components/layout";
 import { CountySelector, countyIdsToNames } from "@/components/county-selector";
+import { buildDeepLink, COUNTY_FIPS_MAP } from "@/lib/deeplinks";
 import type { Indicator } from "@workspace/api-client-react";
 
 export default function SearchPage() {
@@ -142,15 +143,20 @@ export default function SearchPage() {
                           <div className="text-xs text-muted-foreground">{indicator.domainName}</div>
                         </TableCell>
                         <TableCell>
-                          <div className="font-medium">{indicator.county}</div>
-                          <div className="text-xs text-muted-foreground">{indicator.state}</div>
+                          <div className="font-medium">{indicator.state}</div>
+                          <div className="text-xs text-muted-foreground">{indicator.county}</div>
+                          {COUNTY_FIPS_MAP[`${indicator.state}:${indicator.county}`] && (
+                            <div className="text-xs font-mono text-muted-foreground/70">
+                              FIPS {COUNTY_FIPS_MAP[`${indicator.state}:${indicator.county}`]}
+                            </div>
+                          )}
                         </TableCell>
                         <TableCell>
                           <div className="font-mono font-bold text-lg">{indicator.value}</div>
                           <div className="text-xs text-muted-foreground">{indicator.year}</div>
                         </TableCell>
                         <TableCell>
-                          <a href={indicator.sourceUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline" data-testid={`link-source-${indicator.id}`}>
+                          <a href={buildDeepLink(indicator)} target="_blank" rel="noreferrer" className="flex items-center gap-1 text-sm text-primary hover:underline" data-testid={`link-source-${indicator.id}`}>
                             {indicator.source} <ExternalLink className="h-3 w-3" />
                           </a>
                           <div className="flex items-center mt-1" title={`Authority Rank: ${indicator.authorityRank}/5`}>
