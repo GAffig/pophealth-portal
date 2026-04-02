@@ -3,13 +3,23 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Population Health Data Portal API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: indicators
+    description: Health indicator management
+  - name: domains
+    description: Health domains
+  - name: search
+    description: Search functionality
+  - name: saved
+    description: Saved source packets
+  - name: counties
+    description: County data
 paths:
   /healthz:
     get:
@@ -24,6 +34,184 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /domains:
+    get:
+      operationId: listDomains
+      tags: [domains]
+      summary: List all health domains
+      description: Returns all 20 health domains with indicator counts
+      responses:
+        "200":
+          description: List of domains
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Domain"
+
+  /indicators:
+    get:
+      operationId: listIndicators
+      tags: [indicators]
+      summary: List health indicators
+      parameters:
+        - name: domain
+          in: query
+          schema:
+            type: string
+          description: Filter by domain slug
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [TN, VA]
+          description: Filter by state
+        - name: county
+          in: query
+          schema:
+            type: string
+          description: Filter by county name
+      responses:
+        "200":
+          description: List of indicators
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Indicator"
+
+  /indicators/{id}:
+    get:
+      operationId: getIndicator
+      tags: [indicators]
+      summary: Get a single indicator
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Indicator details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Indicator"
+        "404":
+          description: Not found
+
+  /search:
+    post:
+      operationId: searchIndicators
+      tags: [search]
+      summary: Search indicators by natural language query
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SearchRequest"
+      responses:
+        "200":
+          description: Search results
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SearchResponse"
+
+  /counties:
+    get:
+      operationId: listCounties
+      tags: [counties]
+      summary: List all counties
+      parameters:
+        - name: state
+          in: query
+          schema:
+            type: string
+            enum: [TN, VA]
+          description: Filter by state
+        - name: region
+          in: query
+          schema:
+            type: string
+          description: Filter by region (e.g. Northeast Tennessee, Southwest Virginia)
+      responses:
+        "200":
+          description: List of counties
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/County"
+
+  /saved:
+    get:
+      operationId: listSavedSources
+      tags: [saved]
+      summary: List all saved sources
+      responses:
+        "200":
+          description: Saved sources
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/SavedSource"
+
+    post:
+      operationId: saveSource
+      tags: [saved]
+      summary: Save a source to the evidence tray
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SaveSourceRequest"
+      responses:
+        "201":
+          description: Saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SavedSource"
+
+  /saved/{id}:
+    delete:
+      operationId: deleteSavedSource
+      tags: [saved]
+      summary: Remove a saved source
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "204":
+          description: Deleted
+
+  /summary:
+    get:
+      operationId: getPortalSummary
+      tags: [indicators]
+      summary: Get portal-level summary stats
+      description: Returns counts of domains, indicators, counties, and saved sources
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/PortalSummary"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +222,207 @@ components:
       required:
         - status
 
+    Domain:
+      type: object
+      properties:
+        id:
+          type: integer
+        slug:
+          type: string
+        name:
+          type: string
+        indicatorCount:
+          type: integer
+        description:
+          type: string
+      required:
+        - id
+        - slug
+        - name
+        - indicatorCount
+        - description
+
+    Indicator:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        domainId:
+          type: integer
+        domainName:
+          type: string
+        domainSlug:
+          type: string
+        state:
+          type: string
+        county:
+          type: string
+        region:
+          type: string
+        value:
+          type: string
+        year:
+          type: string
+        source:
+          type: string
+        sourceUrl:
+          type: string
+        authorityRank:
+          type: integer
+          description: 1-5 authority ranking (5 = most authoritative)
+        notes:
+          type: string
+      required:
+        - id
+        - name
+        - domainId
+        - domainName
+        - domainSlug
+        - state
+        - county
+        - region
+        - value
+        - year
+        - source
+        - sourceUrl
+        - authorityRank
+
+    County:
+      type: object
+      properties:
+        name:
+          type: string
+        state:
+          type: string
+          enum: [TN, VA]
+        region:
+          type: string
+        fips:
+          type: string
+      required:
+        - name
+        - state
+        - region
+        - fips
+
+    SearchRequest:
+      type: object
+      properties:
+        query:
+          type: string
+        state:
+          type: string
+          enum: [TN, VA]
+        counties:
+          type: array
+          items:
+            type: string
+        domain:
+          type: string
+      required:
+        - query
+
+    SearchResponse:
+      type: object
+      properties:
+        query:
+          type: string
+        interpretation:
+          type: string
+        results:
+          type: array
+          items:
+            $ref: "#/components/schemas/Indicator"
+        totalCount:
+          type: integer
+      required:
+        - query
+        - interpretation
+        - results
+        - totalCount
+
+    SavedSource:
+      type: object
+      properties:
+        id:
+          type: integer
+        indicatorId:
+          type: integer
+        indicatorName:
+          type: string
+        county:
+          type: string
+        state:
+          type: string
+        value:
+          type: string
+        year:
+          type: string
+        source:
+          type: string
+        sourceUrl:
+          type: string
+        domainName:
+          type: string
+        savedAt:
+          type: string
+          format: date-time
+        notes:
+          type: string
+      required:
+        - id
+        - indicatorId
+        - indicatorName
+        - county
+        - state
+        - value
+        - year
+        - source
+        - sourceUrl
+        - domainName
+        - savedAt
+
+    SaveSourceRequest:
+      type: object
+      properties:
+        indicatorId:
+          type: integer
+        notes:
+          type: string
+      required:
+        - indicatorId
+
+    PortalSummary:
+      type: object
+      properties:
+        totalDomains:
+          type: integer
+        totalIndicators:
+          type: integer
+        totalCounties:
+          type: integer
+        totalSaved:
+          type: integer
+        stateBreakdown:
+          type: object
+          properties:
+            TN:
+              type: integer
+            VA:
+              type: integer
+          required:
+            - TN
+            - VA
+        recentlyViewed:
+          type: array
+          items:
+            $ref: "#/components/schemas/Indicator"
+      required:
+        - totalDomains
+        - totalIndicators
+        - totalCounties
+        - totalSaved
+        - stateBreakdown
+        - recentlyViewed

@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "Population Health Data Portal"
+version = "1.0.0"
+id = "artifacts/pophealth-portal"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 19525
+
+[services.development]
+run = "pnpm --filter @workspace/pophealth-portal run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/pophealth-portal", "run", "build" ]
+publicDir = "artifacts/pophealth-portal/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "19525"
+BASE_PATH = "/"
