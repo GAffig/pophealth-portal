@@ -26,11 +26,15 @@ export default function SearchPage() {
     if (!query.trim()) return;
 
     const countyNames = countyIdsToNames(selectedCounties);
+
+    const allTn = selectedCounties.length > 0 && selectedCounties.every(id => id.startsWith("TN:"));
+    const allVa = selectedCounties.length > 0 && selectedCounties.every(id => id.startsWith("VA:"));
+    const effectiveState = allTn ? "TN" : allVa ? "VA" : stateFilter !== "all" ? stateFilter : undefined;
     
     searchMutation.mutate({
       data: {
         query,
-        state: stateFilter !== "all" ? stateFilter as any : undefined,
+        state: effectiveState as any,
         counties: countyNames.length > 0 ? countyNames : undefined,
       }
     });
