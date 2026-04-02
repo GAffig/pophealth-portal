@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useSearchIndicators, useSaveSource, getListSavedSourcesQueryKey } from "@workspace/api-client-react";
+import { useSearchIndicators, useSaveSource, getListSavedSourcesQueryKey, SearchRequestState } from "@workspace/api-client-react";
 import { Search, Loader2, Star, Save, ExternalLink } from "lucide-react";
 import { useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
@@ -29,13 +29,23 @@ export default function SearchPage() {
 
     const allTn = selectedCounties.length > 0 && selectedCounties.every(id => id.startsWith("TN:"));
     const allVa = selectedCounties.length > 0 && selectedCounties.every(id => id.startsWith("VA:"));
-    const effectiveState = allTn ? "TN" : allVa ? "VA" : stateFilter !== "all" ? stateFilter : undefined;
-    
+    const isSingleState = allTn || allVa;
+
+    const effectiveState: SearchRequestState | undefined =
+      allTn ? SearchRequestState.TN
+      : allVa ? SearchRequestState.VA
+      : stateFilter === "TN" ? SearchRequestState.TN
+      : stateFilter === "VA" ? SearchRequestState.VA
+      : undefined;
+
     searchMutation.mutate({
       data: {
         query,
-        state: effectiveState as any,
-        counties: countyNames.length > 0 ? countyNames : undefined,
+        state: effectiveState,
+        // Only pass county names when a single state is in scope —
+        // prevents ambiguous county names (e.g., "Washington") from
+        // matching the same-named county in the other state.
+        counties: isSingleState && countyNames.length > 0 ? countyNames : undefined,
       }
     });
   };
